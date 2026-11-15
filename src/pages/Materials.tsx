@@ -1,5 +1,5 @@
 ﻿
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { FormEvent } from "react";
 import {
@@ -59,7 +59,7 @@ function mapMaterial(item: MaterialApi): Material {
 
 export default function Materials() {
   const { user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 const isAdmin = user?.role === "Admin";
   const [materials, setMaterials] = useState<Material[]>([]);
   const [search, setSearch] = useState("");
