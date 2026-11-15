@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 
 type LotStatus = "Active" | "Expired" | "Depleted";
 
@@ -90,6 +91,7 @@ const emptyForm: LotForm = {
 
 function Lots() {
   const { user } = useAuth();
+    const [searchParams] = useSearchParams();
 const isAdmin = user?.role === "Admin";
   const [lots, setLots] = useState<Lot[]>([]);
   const [materials, setMaterials] = useState<MaterialApi[]>([]);
@@ -127,7 +129,13 @@ const isAdmin = user?.role === "Admin";
   useEffect(() => {
     loadData();
   }, []);
+  useEffect(() => {
+    const query = searchParams.get("search");
 
+    if (query) {
+      setSearch(query);
+    }
+  }, [searchParams]);
   const selectedMaterial = materials.find(
     (item) => String(item.id) === form.materialId
   );

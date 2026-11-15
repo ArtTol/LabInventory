@@ -1,5 +1,6 @@
 ﻿
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import type { FormEvent } from "react";
 import {
   Plus, Search, Download, Filter, MoreHorizontal,
@@ -58,6 +59,7 @@ function mapMaterial(item: MaterialApi): Material {
 
 export default function Materials() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 const isAdmin = user?.role === "Admin";
   const [materials, setMaterials] = useState<Material[]>([]);
   const [search, setSearch] = useState("");
@@ -89,6 +91,13 @@ const isAdmin = user?.role === "Admin";
   useEffect(() => {
     void loadMaterials();
   }, []);
+  useEffect(() => {
+  const query = searchParams.get("search");
+
+  if (query) {
+    setSearch(query);
+  }
+}, [searchParams]);
 
   const filtered = useMemo(() => {
     return materials.filter((item) => {

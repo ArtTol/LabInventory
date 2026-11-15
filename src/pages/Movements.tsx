@@ -1,5 +1,6 @@
 ﻿
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Search,
   Download,
@@ -65,6 +66,7 @@ const [adjustmentLoading, setAdjustmentLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState("All types");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     async function loadMovements() {
@@ -103,6 +105,13 @@ const [adjustmentLoading, setAdjustmentLoading] = useState(false);
 
     loadMovements();
   }, []);
+    useEffect(() => {
+    const query = searchParams.get("search");
+
+    if (query) {
+      setSearch(query);
+    }
+  }, [searchParams]);
   useEffect(() => {
   if (!adjustmentModalOpen) return;
 

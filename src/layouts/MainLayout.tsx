@@ -6,6 +6,30 @@ import {
   Users, History, Search, Bell, Settings, ChevronDown
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useState, useEffect, useMemo } from "react";
+import { api } from "../services/api";
+
+type GlobalMaterial = {
+  id: number;
+  name: string;
+  catalogNumber: string | null;
+};
+
+type GlobalLot = {
+  id: number;
+  lotNumber: string;
+  materialId: number;
+  material: string;
+  currentQuantity: number | string;
+};
+
+type GlobalMovement = {
+  id: number | string;
+  material: string;
+  lotNumber: string;
+  reference: string | null;
+  user: string;
+};
 
 const navigation = [
   {
@@ -42,6 +66,70 @@ const navigation = [
 export default function MainLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchMaterials, setSearchMaterials] = useState<GlobalMaterial[]>([]);
+const [searchLots, setSearchLots] = useState<GlobalLot[]>([]);
+const [searchMovements, setSearchMovements] = useState<GlobalMovement[]>([]);
+
+useEffect(() => {
+  if (!searchOpen) return;
+
+  async function loadSearchData() {
+    try {
+      const [materials, lots, movements] = await Promise.all([
+        api.get<GlobalMaterial[]>("/materials"),
+        api.get<GlobalLot[]>("/lots"),
+        api.get<GlobalMovement[]>("/movements"),
+      ]);
+
+      setSearchMaterials(materials);
+      setSearchLots(lots);
+      setSearchMovements(movements);
+    } catch (error) {
+      console.error("Failed to load global search data:", error);
+    }
+  }
+
+  loadSearchData();
+}, [searchOpen]);
+const filteredSearchMaterials = useMemo(() => {
+  const query = searchQuery.trim().toLowerCase();
+  if (!query) return [];
+
+  return searchMaterials.filter(
+    (item) =>
+      item.name.toLowerCase().includes(query) ||
+      String(item.id).includes(query) ||
+      (item.catalogNumber || "").toLowerCase().includes(query)
+  );
+}, [searchMaterials, searchQuery]);
+
+const filteredSearchLots = useMemo(() => {
+  const query = searchQuery.trim().toLowerCase();
+  if (!query) return [];
+
+  return searchLots.filter(
+    (item) =>
+      item.lotNumber.toLowerCase().includes(query) ||
+      String(item.id).includes(query) ||
+      item.material.toLowerCase().includes(query)
+  );
+}, [searchLots, searchQuery]);
+
+const filteredSearchMovements = useMemo(() => {
+  const query = searchQuery.trim().toLowerCase();
+  if (!query) return [];
+
+  return searchMovements.filter(
+    (item) =>
+      String(item.id).toLowerCase().includes(query) ||
+      item.material.toLowerCase().includes(query) ||
+      item.lotNumber.toLowerCase().includes(query) ||
+      (item.reference || "").toLowerCase().includes(query) ||
+      (item.user || "").toLowerCase().includes(query)
+  );
+}, [searchMovements, searchQuery]);
 
   const initials = (user?.fullName || user?.username || "U")
     .split(/\s+/)
@@ -128,9 +216,99 @@ export default function MainLayout() {
           </div>
 
           <div className="topbar-actions">
-            <button className="icon-button" aria-label="Search">
-              <Search size={19} />
-            </button>
+            {searchOpen && (
+  <input
+    type="text"
+    className="global-search-input"
+    placeholder="Search materials, lots, stock, movements..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    autoFocus
+  />
+)}
+{searchOpen && searchQuery.trim() && (
+  <div className="global-search-results">
+    {filteredSearchMaterials.length > 0 && (
+      <div className="global-search-group">
+        <div className="global-search-heading">Materials</div>
+
+        {filteredSearchMaterials.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className="global-search-result"
+            onClick={() => {
+              setSearchOpen(false);
+              setSearchQuery("");
+              navigate(`/materials?search=${encodeURIComponent(String(item.id))}`);
+            }}
+          >
+            <strong>{item.name}</strong>
+            <span>ID: {item.id} · Catalog: {item.catalogNumber || "—"}</span>
+          </button>
+        ))}
+      </div>
+    )}
+
+    {filteredSearchLots.length > 0 && (
+      <div className="global-search-group">
+        <div className="global-search-heading">Lots</div>
+
+        {filteredSearchLots.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className="global-search-result"
+            onClick={() => {
+              setSearchOpen(false);
+              setSearchQuery("");
+              navigate(`/lots?search=${encodeURIComponent(item.lotNumber)}`);
+            }}
+          >
+            <strong>{item.lotNumber}</strong>
+            <span>ID: {item.id} · Material: {item.material}</span>
+          </button>
+        ))}
+      </div>
+    )}
+
+    {filteredSearchMovements.length > 0 && (
+      <div className="global-search-group">
+        <div className="global-search-heading">Movements</div>
+
+        {filteredSearchMovements.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className="global-search-result"
+            onClick={() => {
+              setSearchOpen(false);
+              setSearchQuery("");
+              navigate(`/movements?search=${encodeURIComponent(String(item.id))}`);
+            }}
+          >
+            <strong>{item.material}</strong>
+            <span>ID: {item.id} · Lot: {item.lotNumber} · Ref: {item.reference || "—"}</span>
+          </button>
+        ))}
+      </div>
+    )}
+
+    {filteredSearchMaterials.length === 0 &&
+      filteredSearchLots.length === 0 &&
+      filteredSearchMovements.length === 0 && (
+        <div className="global-search-heading">No results found</div>
+      )}
+  </div>
+)}
+            <button
+  className="icon-button"
+  type="button"
+  aria-label="Search"
+  onClick={() => setSearchOpen((prev) => !prev)}
+>
+  <Search size={19} />
+</button>
             <button className="icon-button notification" aria-label="Notifications">
               <Bell size={19} />
               <span />
