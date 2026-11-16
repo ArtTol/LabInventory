@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { pool } from "../config/database.js";
@@ -97,10 +96,24 @@ router.post("/login", async (req, res) => {
       });
     });
 
+    console.log("LOGIN DEBUG:", {
+      sessionID: req.sessionID,
+      secure: req.secure,
+      protocol: req.protocol,
+      forwardedProto: req.headers["x-forwarded-proto"],
+      setCookie: res.getHeader("Set-Cookie"),
+    });
+
     res.status(200).json({
       status: "ok",
       message: "Login successful",
       user: req.session.user,
+      _debug: {
+        sessionID: req.sessionID,
+        secure: req.secure,
+        forwardedProto: req.headers["x-forwarded-proto"],
+        hasSetCookie: Boolean(res.getHeader("Set-Cookie")),
+      },
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -155,4 +168,3 @@ router.post("/logout", (req, res) => {
 });
 
 export default router;
-
