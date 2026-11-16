@@ -16,6 +16,7 @@ dotenv.config({ path: "backend/.env" });
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+app.set("trust proxy", 1);
 
 if (!process.env.SESSION_SECRET) {
   throw new Error("SESSION_SECRET is not configured");
