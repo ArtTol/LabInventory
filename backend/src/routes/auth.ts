@@ -143,7 +143,7 @@ router.post("/logout", (req, res) => {
     res.clearCookie("labinventory.sid", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
     });
 
     res.status(200).json({
