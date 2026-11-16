@@ -1,12 +1,13 @@
 
 import { Router } from "express";
-
 import bcrypt from "bcryptjs";
 import { pool } from "../config/database.js";
 
 const router = Router();
 
-
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  Boolean(process.env.RAILWAY_ENVIRONMENT);
 
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
@@ -142,8 +143,8 @@ router.post("/logout", (req, res) => {
 
     res.clearCookie("labinventory.sid", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
     });
 
     res.status(200).json({
@@ -154,3 +155,4 @@ router.post("/logout", (req, res) => {
 });
 
 export default router;
+
