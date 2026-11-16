@@ -16,7 +16,10 @@ dotenv.config({ path: "backend/.env" });
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
-app.set("trust proxy", 1);
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  Boolean(process.env.RAILWAY_ENVIRONMENT);
+app.set("trust proxy", true);
 
 if (!process.env.SESSION_SECRET) {
   throw new Error("SESSION_SECRET is not configured");
@@ -45,10 +48,11 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 8 * 60 * 60 * 1000,
     },
   })
